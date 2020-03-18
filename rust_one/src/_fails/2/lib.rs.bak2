@@ -1,0 +1,111 @@
+#[derive(Debug)]
+pub struct Cell<'a> {
+	state: Option<Box<dyn State>>,
+	adjecents: Vec<&'a Cell<'a>>
+}
+impl<'a> Cell<'a> {
+	pub fn new() -> Cell<'a> {
+		Cell {
+			state : None,
+			adjecents : Vec::new()
+		}
+	}
+
+	pub fn push(&mut self, cell : &'a Cell) {
+		self.adjecents.push(cell);
+	}
+
+	pub fn append(&mut self, cells : & mut Vec<&'a Cell<'a>>) {
+		self.adjecents.append(cells);
+	}
+
+
+	fn get_state(&self) -> bool {
+		self.state.as_ref().expect("uninitialize").get_state()
+	}
+
+	fn count(&self) -> usize {
+		self.adjecents.iter().filter(|cell| {cell.get_state()}).count()
+	}
+
+	
+	pub fn update(&mut self) -> Result<(), &str> {
+		self.state = Some(self.state.take().expect("uninitialize").update(self.count())?);
+		Ok(())
+	}
+}
+
+trait State : std::fmt::Debug {
+	fn get_state(&self) -> bool;
+	fn update(self : Box<Self>, n : usize) -> Result<Box<dyn State>, &'static str>;
+}
+
+#[derive(Debug)]
+pub struct Off {
+	rule : Vec<bool>,
+	pub turn_on : Option<Box<On>>
+}
+impl Off {
+	pub fn new() -> Off {
+		Off {
+			rule : vec![],
+			turn_on : None
+		}
+	}
+
+	pub fn from(v : Vec<bool>) -> Off {
+		Off {
+			rule : v,
+			turn_on : None
+		}
+	}
+}
+impl State for Off {
+	fn get_state(&self) -> bool {false}
+
+	fn update(self : Box<Self>, n : usize) -> Result<Box<dyn State>, &'static str> {
+		match self.rule.get(n) {
+			Some(b) => if *b {
+				Ok(self.turn_on.expect("uninitialize"))
+			} else {
+				Ok(self)
+			},
+			None => Err("number of adjecents is too big")
+		}
+	}
+}
+
+#[derive(Debug)]
+pub struct On {
+	rule : Vec<bool>,
+	pub turn_off : Option<Box<Off>>
+}
+impl On {
+	pub fn new() -> On {
+		On {
+			rule : vec![],
+			turn_off : None
+		}
+	}
+
+	pub fn from(v : Vec<bool>) -> On {
+		On {
+			rule : v,
+			turn_off : None
+		}
+	}
+}
+impl State for On {
+	fn get_state(&self) -> bool {false}
+
+	fn update(self : Box<Self>, n : usize) -> Result<Box<dyn State>, &'static str> {
+		match self.rule.get(n) {
+			Some(b) => if *b {
+				Ok(self)
+			} else {
+				Ok(self.turn_off.expect("uninitialize"))
+			},
+			None => Err("number of adjecents is too big")
+		}
+	}
+}

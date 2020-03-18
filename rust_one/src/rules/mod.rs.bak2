@@ -1,0 +1,53 @@
+use crate::{On, Off};
+// use crate::cell::State;
+use std::rc::{Rc, Weak};
+use std::cell::RefCell;
+// use std::fmt;
+
+pub struct Rule {
+	on  : Option<Rc< On>>,
+    off : Option<Rc<Off>>,
+}
+
+impl Rule {
+    pub fn new(state: On) -> Rule {
+		Rule {
+			off : state.turn_off.as_ref().map(|s| Rc::clone(&s.upgrade().unwrap())),
+			on  : Some(Rc::new(state)),
+		}
+    }
+}
+
+impl Rule {
+    pub fn  on(&self) -> Rc< On> {
+		if let Some(v) = self.on.clone() {
+			v
+		} else {
+			panic!("I don't know");
+		}
+    }
+	
+	pub fn off(&self) -> Rc<Off> {
+		if let Some(v) = self.off.clone() {
+			v
+		} else {
+			panic!("I don't know");
+		}
+    }
+}
+
+// const B2_S23_on : Rc<On> = 
+
+// pub struct _Rule;
+// impl _Rule {
+// 	fn  B2_S23(state : bool) ->  impl State {
+// 		let mut  on =  On::from(vec![false, false,  true,  true, false]);
+// 		let mut off = Off::from(vec![false,  true,  false,  false, false]);
+// 		on.turn_off = Some(Rc::downgrade(&Rc::new(off)));
+// 		off.turn_on = Some(Rc::downgrade(&Rc::new( on)));
+// 		if state {
+// 			on
+// 		} else {
+// 			off
+// 		}
+// 	}
