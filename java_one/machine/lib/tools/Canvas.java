@@ -35,17 +35,20 @@ public class Canvas {
 		}
 	}
 
-	public void update() throws Exception {
+	public void refresh() {
 		// make sure all the count's has been stored
 		for (List<Cell> temp_list : board) {
 			for (Cell cell : temp_list) {
 				cell.count();
 			}
 		}
+	}
 
+	public void update() throws Exception {
+		refresh();
 		for (List<Cell> temp_list : board) {
 			for (Cell cell : temp_list) {
-				// if it is long-some (longlive or longdead), it can be skipped
+				// + if it is long-some (longlive or longdead), it can be skipped
 				cell.update();
 			}
 		}

@@ -34,4 +34,12 @@ public class On implements State {
 			return turn_off;
 		}
 	}
+	
+	public State update(boolean on) {
+		if (on) {
+			return this;
+		} else {
+			return turn_off;
+		}
+	}
 }

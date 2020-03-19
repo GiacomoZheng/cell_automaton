@@ -2,11 +2,14 @@ package machine;
 
 import machine.lib.tools.Canvas;
 import machine.lib.Rule;
+import machine.lib.Config;
+import machine.lib.screen.ScreenModule;
 
 import java.util.Arrays;
 import java.util.List;
 
-import machine.lib.Config;
+import java.awt.EventQueue;
+
 
 public class Main {
 	public static void main(String[] args) throws Exception {
@@ -30,7 +33,7 @@ public class Main {
 		// 	Arrays.asList( sf, sf, sf, sf, sf, sf )
 		// );
 
-		Rule B1 = Rule.from(Arrays.asList( false, false, false, false, false ), Arrays.asList( false,  true,  false, false, false ));
+		Rule B1 = Rule.from(Arrays.asList( false, false, false, false, false ), Arrays.asList( false,  true,  false, false, true ));
 		Config n1 = B1.on();
 		Config f1 = B1.off();
 		Rule B2 = Rule.from(Arrays.asList( false, false, false, false, false ), Arrays.asList( false,  false,  true, false, false ));
@@ -41,19 +44,35 @@ public class Main {
 		canvas.buildup_rect_board();
 		List<List<Config>> configs = Arrays.asList(
 			Arrays.asList(  lf,  f1,  f2,  f2,  f2,  f2,  f2,  f2,  f2,  f2 ),
-			Arrays.asList(  pn,  f1,  f1,  f1,  f1,  f1,  f1,  f1,  f1,  f1 ),
+			Arrays.asList(  ln,  f1,  f1,  f1,  f1,  f1,  f1,  f1,  f1,  f1 ),
 			Arrays.asList(  lf,  f1,  f2,  f2,  f2,  f2,  f2,  f2,  f2,  f2 )
 		);
-
-		boolean debug_config = true;
 		canvas.init(configs);
-		canvas.debug(debug_config);
 
-		while (true) {
-			System.in.read();
+		// command line test
+		// boolean debug_config = false;
+		// canvas.debug(debug_config);
+		// while (true) {
+		// 	canvas.update();
+			
+		// 	System.in.read();
 
-			canvas.update();
-			canvas.debug(debug_config);
-		}
+		// 	canvas.debug(debug_config);
+		// }
+
+		// gui test
+		EventQueue.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					ScreenModule frame = new ScreenModule(canvas);
+					frame.setVisible(true);
+					
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
 	}
+	
 }

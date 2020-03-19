@@ -24,7 +24,7 @@ public class Cell {
 	}
 
 	// fn get_state(&self) -> bool {
-	private Boolean get_state() {
+	public Boolean get_state() {
 		return state.get_state();
 	}
 
@@ -39,17 +39,29 @@ public class Cell {
 		count = counter;
 		return counter;
 	}
-	public void clear() {
-		count = null;
-	}
 
 	public int count_adjs() { // for debug
 		return adjecents.size();
 	}
 
+	private void clear() {
+		count = null;
+	}
 	public void update() throws Exception {
 		state = state.update(count()); // * update
 		clear();
+	}
+
+	private void clear_adj() {
+		for (Cell cell: adjecents) {
+			cell.count = null;
+		}
+	}
+	public void update(boolean on) {
+		// only for clicked button
+
+		state = state.update(on);
+		clear_adj();
 	}
 
 	public void append_adj(List<Cell> v) {
@@ -102,4 +114,6 @@ interface State {
 	Boolean get_state();
 	// fn update(self : Rc<Self>, n : usize) -> Result<Rc<dyn State>, &'static str>;
 	State update(int n) throws Exception;
+
+	State update(boolean on);
 }
