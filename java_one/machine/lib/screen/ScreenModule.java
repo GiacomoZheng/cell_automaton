@@ -79,6 +79,7 @@ public class ScreenModule extends JFrame {
 				try {
 					update();
 				} catch (Exception e) {
+					System.out.println("error in update");
 					System.exit(0);
 				}
 			}
