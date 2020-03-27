@@ -16,8 +16,7 @@ public class Rule {
 	public static final Rule toLIVE_4 = Rule.from(Arrays.asList( true,  true,  true,  true,  true), Arrays.asList( true,  true,  true,  true,  true));
 
 
-    // pub fn new(state: RefCell<Rc< On>>) -> Rule {
-	Rule(On state) {
+	Rule(On state) { // ! deprecated on rust
 		// Rule rule = Rule();
 		this.on  = state;
 		this.off = state.turn_off;

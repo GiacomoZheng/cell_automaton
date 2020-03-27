@@ -1,27 +1,29 @@
-#[allow(unused_imports)]
-use rust_one::{Cell, On, Off, buildup_square_board, buildup_rect_board};
+use rust_one::Canvas;
+use rust_one::Rule;
 
-use std::rc::Rc;
-use std::cell::RefCell;
-
-// #[allow(unused_variables)]
 fn main() {
-	for temp_vec in buildup_square_board(4).iter() {
-		for block in temp_vec.iter() {
-			print!("{:?}\t", block.borrow());
-		}
-		println!();
-		println!();
-	}
+	const T : bool = true;
+	const F : bool = false;
 
-	{
-		// // !!!!!
-		// let mut  on =  On::from(vec![false, false,  true,  true, false]);
-		// let mut off = Off::from(vec![false,  true, false, false, false]);
-		// let to_off = Rc::new(off); 
-		// let  to_on = Rc::new( on);
-		// to_on.turn_off = Some(RefCell::new(Rc::downgrade(&to_off)));
-		// to_off.turn_on = Some(RefCell::new(Rc::downgrade( &to_on)));
-		// // on
-	};
+	let longdead = Rule::from(vec![F, F, F, F, F], vec![F, F, F, F, F]);
+		let saw_lf = longdead.off();
+		let lf = Some(&saw_lf);
+	let longlive = Rule::from(vec![T, T, T, T, T], vec![T, T, T, T, T]);
+		let saw_ln = longlive.on();
+		let ln = Some(&saw_ln);
+
+	let mut canvas = Canvas::new(5, 4);
+	canvas.buildup_rect_board();
+	if let Err(e) = canvas.init(vec![
+		vec![ lf, lf, lf, lf, lf ],
+		vec![ lf, lf, ln, lf, lf ],
+		vec![ lf, lf, lf, lf, lf ],
+		vec![ lf, lf, lf, lf, lf ],
+	]) {
+		eprintln!("{}", e);
+	}
+	println!("{:?}", canvas);
+	println!("longdead::on  : {}", longdead.count(F));
+	println!("longlive::off : {}", longlive.count(T));
+	// println!("{:?}", canvas.board[0][0].as_ref().unwrap().borrow());
 }

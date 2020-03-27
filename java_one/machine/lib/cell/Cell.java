@@ -28,6 +28,7 @@ public class Cell {
 		return state.get_state();
 	}
 
+	// fn init(&self)
 	public int count() { // make it into a closure
 		if (count != null) {return count; }
 		int counter = 0;

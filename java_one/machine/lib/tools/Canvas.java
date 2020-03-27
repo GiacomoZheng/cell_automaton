@@ -55,8 +55,8 @@ public class Canvas {
 	}
 
 	// ------------------------------
-	public void buildup_hex_board() {
-		type = "hex";
+	public void buildup_tri_board() {
+		type = "tri";
 		List<Cell> even_line = new ArrayList<Cell>();
 		List<Cell>  odd_line = new ArrayList<Cell>();
 
@@ -381,7 +381,7 @@ public class Canvas {
 				}
 				string.append("    " + (board.get(n-1).get(m-1).count_adjs()) + "\n");
 				break;
-			// case "hex":
+			// case "tri":
 
 		}
 		return string.toString();
