@@ -8,18 +8,14 @@ import java.util.Arrays;
 
 import java.awt.EventQueue;
 
-public class Corner {
+public class C_to_P_24 {
 	public static void main(String[] args) throws Exception {
-		Canvas canvas = new Canvas(8, 7);
+		Canvas canvas = new Canvas(11, 3);
 		canvas.buildup_rect_board();
 		canvas.init(Arrays.asList(
-			Arrays.asList(  lf, f13,  lf, f13,  lf,  lf,  lf,  lf ),
-			Arrays.asList(  sn, f13, f13, f13, f13, f13, f13,  lf ),
-			Arrays.asList(  lf,  lf, f13,  lf, f13,  f2,  lf,  lf ),
-			Arrays.asList(  lf,  lf,  lf, f13, f13,  lf,  lf,  lf ),
-			Arrays.asList(  lf,  lf,  lf,  lf, f13, f13,  lf,  lf ),
-			Arrays.asList(  lf,  lf,  lf, f13, f13,  lf,  lf,  lf ),
-			Arrays.asList(  lf,  lf,  lf,  lf, f13,  lf,  lf,  lf )
+			Arrays.asList(  lf,  lf,  lf,  lf,  lf, f13,  lf, f13,  lf, f13,  lf ),
+			Arrays.asList(  sn, f13, f13, f13, f13, f13, f13, f13, f13, f13, f13 ),
+			Arrays.asList(  lf,  lf,  lf,  lf, f13,  lf, f13,  lf, f13,  lf,  lf )
 		));
 
 		// command line test
@@ -47,4 +43,5 @@ public class Corner {
 			}
 		});
 	}
+
 }

@@ -1,56 +1,86 @@
-use super::Rule;
+use std::sync::{Arc, Weak};
 use std::fmt;
-use std::rc::Weak;
 
-pub struct On {
-	pub rule : Weak<Rule>,
-	pub mapping : Vec<bool>
+struct On {
+	rule : Weak<Rule>,
+	mapping : Vec<bool>
 }
+struct Off {
+	rule : Weak<Rule>,
+	mapping : Vec<bool>
+}
+
 impl fmt::Debug for On {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "on : {:?}", self.mapping)
 	}
 }
-
-pub struct Off {
-	pub rule : Weak<Rule>,
-	pub mapping : Vec<bool>
+impl fmt::Display for On {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		let mut res = String::new();
+		for (count, &b) in self.mapping.iter().enumerate() {
+			if b {
+				res += count.to_string().as_str();
+			}
+		}
+		write!(f, "S{}", res)
+	}
 }
+
 impl fmt::Debug for Off {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "on : {:?}", self.mapping)
 	}
 }
+impl fmt::Display for Off {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		let mut res = String::new();
+		for (count, &b) in self.mapping.iter().enumerate() {
+			if b {
+				res += count.to_string().as_str();
+			}
+		}
+		write!(f, "B{}", res)
+	}
+}
 
-use std::rc::Rc;
-trait State : fmt::Debug {
+
+pub enum Infor {
+	OnToOff,
+	OffToOn,
+}
+use Infor::*;
+
+use std::marker::{Sync, Send};
+pub trait State : fmt::Debug + fmt::Display + Sync + Send {
 	fn get_state(&self) -> bool;
-	fn update(self : Rc<Self>, n : usize) -> Result<Rc<dyn State>, &'static str>; // +
+	fn update(self : Arc<Self>, n : usize) -> Result<(Arc<dyn State>, Option<Infor>), &'static str>;
 
 	/// for botton clicked in gui 
-	fn force_to(self : Rc<Self>, on : bool) -> Rc<dyn State>;
+	fn force_to(self : Arc<Self>, on : bool) -> (Arc<dyn State>, Option<Infor>);
+
 }
 
 impl State for On {
 	fn get_state(&self) -> bool {true}
 
-	fn update(self : Rc<Self>, n : usize) -> Result<Rc<dyn State>, &'static str> {
+	fn update(self : Arc<Self>, n : usize) -> Result<(Arc<dyn State>, Option<Infor>), &'static str> {
 		if let Some(b) = self.mapping.get(n) {
 			if *b {
-				Ok(self)
+				Ok((self, None))
 			} else {
-				Ok(self.rule.upgrade().unwrap().off.borrow().as_ref().unwrap().clone())
+				Ok((self.rule.upgrade().expect("Do not drop the rule").off.read().unwrap().as_ref().unwrap().clone(), Some(OnToOff)))
 			}
 		} else {
-			Err("too many adjecents around")
+			Err("no enough adjecents around")
 		}
 	}
 
-	fn force_to(self : Rc<Self>, on : bool) -> Rc<dyn State> {
+	fn force_to(self : Arc<Self>, on : bool) -> (Arc<dyn State>, Option<Infor>) {
 		if on {
-			self
+			(self, None)
 		} else {
-			self.rule.upgrade().unwrap().off.borrow().as_ref().unwrap().clone()
+			(self.rule.upgrade().expect("Do not drop the rule").off.read().unwrap().as_ref().unwrap().clone(), Some(OnToOff))
 		}
 	}
 }
@@ -58,104 +88,77 @@ impl State for On {
 impl State for Off {
 	fn get_state(&self) -> bool {false}
 
-	fn update(self : Rc<Self>, n : usize) -> Result<Rc<dyn State>, &'static str> {
+	fn update(self : Arc<Self>, n : usize) -> Result<(Arc<dyn State>, Option<Infor>), &'static str> {
 		if let Some(b) = self.mapping.get(n) {
 			if *b {
-				Ok(self.rule.upgrade().unwrap().on.borrow().as_ref().unwrap().clone())
+				Ok((self.rule.upgrade().expect("Do not drop the rule").on.read().unwrap().as_ref().unwrap().clone(), Some(OffToOn)))
 			} else {
-				Ok(self)
+				Ok((self, None))
 			}
 		} else {
-			Err("too many adjecents around")
+			Err("no enough adjecents around")
 		}
 	}
 
-	fn force_to(self : Rc<Self>, on : bool) -> Rc<dyn State> {
+	fn force_to(self : Arc<Self>, on : bool) -> (Arc<dyn State>, Option<Infor>) {
 		if on {
-			self.rule.upgrade().unwrap().on.borrow().as_ref().unwrap().clone()
+			(self.rule.upgrade().expect("Do not drop the rule").on.read().unwrap().as_ref().unwrap().clone(), Some(OffToOn))
 		} else {
-			self
+			(self, None)
 		}
 	}
 }
 
-use std::cell::RefCell;
-pub struct Cell {
-	state : Option<Rc<dyn State>>,
-	adjecents : Vec<Weak<RefCell<Cell>>>,
+// ------------------------ rule ------------------------
+use std::sync::RwLock;
+pub struct Rule {
+	on  : RwLock<Option<Arc<dyn State>>>,
+	off : RwLock<Option<Arc<dyn State>>>,
 
-	count : usize,
 }
-
-impl Cell { // methods
-	pub fn get_state(&self) -> bool {self.state.as_ref().expect("uninitialize").get_state()}
-
-	pub fn update(& mut self) -> Result<(), &'static str> {
-		self.state = Some(self.state.take().unwrap().update(self.count())?);
-		Ok(())
+impl Rule {
+	pub fn from(vec_on : Vec<bool>, vec_off : Vec<bool>) -> Arc<Rule> {
+		let rule = Rule {on : RwLock::new(None), off : RwLock::new(None)};
+		let rc = Arc::new(rule);
+		let on = Arc::new(On {
+			rule : Arc::downgrade(&rc),
+			mapping : vec_on
+		}) as Arc<dyn State>;
+		let off = Arc::new(Off {
+			rule : Arc::downgrade(&rc),
+			mapping : vec_off
+		}) as Arc<dyn State>;
+		rc.on.write().unwrap().replace(on);
+		rc.off.write().unwrap().replace(off);
+		rc
 	}
 
-	/// only for clicked button
-	pub fn force_to(& mut self, on : bool) {
-		self.state = Some(self.state.take().unwrap().force_to(on));
-	}
-
-	/// init it after buildup board
-	pub fn init(& mut self) {
-		self.count = self.adjecents.iter().filter(|cell| cell.upgrade().unwrap().borrow().get_state()).count();
-	}
-
-	pub fn count(&self) -> usize {
-		self.count
-	}
-
-	// initialize
-	pub fn set(& mut self, config : &Config) {
-		if config.on {
-			self.state = Some(Rc::clone(&config.rule.on.borrow().as_ref().unwrap()) as Rc<dyn State>);
+	pub fn count(&self, on : bool) -> usize {
+		if on {
+			Arc::strong_count(&self.on.read().unwrap().as_ref().unwrap()) - 1
 		} else {
-			self.state = Some(Rc::clone(&config.rule.off.borrow().as_ref().unwrap()) as Rc<dyn State>);
+			Arc::strong_count(&self.off.read().unwrap().as_ref().unwrap()) - 1
 		}
 	}
-	
-	/// for debug
-	pub fn count_adj(&self) -> usize {
-		self.adjecents.len()
+
+	pub fn on(self : &Arc<Self>) -> Option<Weak<dyn State>> {
+		Some(Arc::downgrade(self.on.read().unwrap().as_ref().unwrap()))
 	}
 
-	pub fn append_adj(& mut self, v : & mut Vec<Weak<RefCell<Cell>>>) {
-		self.adjecents.append(v);
+	pub fn off(self : &Arc<Self>) -> Option<Weak<dyn State>> {
+		Some(Arc::downgrade(self.off.read().unwrap().as_ref().unwrap()))
 	}
 }
-
-use super::Config;
-impl Cell { 
-	pub fn new() -> Cell {
-		Cell {
-			state : None,
-			adjecents : Vec::new(),
-			count : 0
-		}
-	}
-	
-	pub fn from(config : &Option<Config>) -> Result<Cell, &'static str> {
-		if let Some(c) = config {
-			let mut cell = Cell::new();
-			cell.set(c);
-			Ok(cell)
-		} else {
-			Err("wrong initialization")
-		}
-	}
-}
-
-impl fmt::Display for Cell {
+impl fmt::Display for Rule {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(f, "[{}]", if self.get_state() {"■"} else {"□"})
+		// self.on.read().unwrap().
+		write!(f, "{}-{}", self.off.read().unwrap().as_ref().unwrap().as_ref(), self.on.read().unwrap().as_ref().unwrap().as_ref())
     }
 }
-impl fmt::Debug for Cell {
+impl fmt::Debug for Rule {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(f, "{}:{}\t", self, self.count_adj()) // **
+		write!(f, "{}::on \t: {}\n", self, self.count(false))?;
+		// write!(f, "\n")?;
+		write!(f, "{}::off\t: {}\n", self, self.count(true))
     }
 }

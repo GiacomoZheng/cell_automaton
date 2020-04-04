@@ -1,0 +1,87 @@
+use crate::rules::Rule;
+use std::fmt;
+use std::rc::Weak;
+
+pub struct On {
+	pub rule : Weak<Rule>,
+	pub mapping : Vec<bool>
+}
+impl fmt::Debug for On {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "on : {:?}", self.mapping)
+	}
+}
+// impl On {
+// 	pub fn from(Vec<bool> mapping) -> On {
+// 		On {
+// 			mapping
+// 		}
+// 	}
+// }
+
+pub struct Off {
+	pub rule : Weak<Rule>,
+	pub mapping : Vec<bool>
+}
+impl fmt::Debug for Off {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "on : {:?}", self.mapping)
+	}
+}
+
+use std::rc::Rc;
+trait State : fmt::Debug {
+	fn get_state(&self) -> bool;
+	fn update(self : Rc<Self>, n : usize) -> Result<Rc<dyn State>, &'static str>; // +
+
+	/// for botton clicked in gui 
+	fn force_to(self : Rc<Self>, on : bool) -> Rc<dyn State>;
+}
+
+impl State for On {
+	fn get_state(&self) -> bool {true}
+
+	fn update(self : Rc<Self>, n : usize) -> Result<Rc<dyn State>, &'static str> {
+		if let Some(b) = self.mapping.get(n) {
+			if *b {
+				Ok(self)
+			} else {
+				Ok(self.rule.upgrade().unwrap().off.as_ref().unwrap().clone())
+			}
+		} else {
+			Err("too many adjecents around")
+		}
+	}
+
+	fn force_to(self : Rc<Self>, on : bool) -> Rc<dyn State> {
+		if on {
+			self
+		} else {
+			self.rule.upgrade().unwrap().off.as_ref().unwrap().clone()
+		}
+	}
+}
+
+impl State for Off {
+	fn get_state(&self) -> bool {false}
+
+	fn update(self : Rc<Self>, n : usize) -> Result<Rc<dyn State>, &'static str> {
+		if let Some(b) = self.mapping.get(n) {
+			if *b {
+				Ok(self.rule.upgrade().unwrap().on.as_ref().unwrap().clone())
+			} else {
+				Ok(self)
+			}
+		} else {
+			Err("too many adjecents around")
+		}
+	}
+
+	fn force_to(self : Rc<Self>, on : bool) -> Rc<dyn State> {
+		if on {
+			self.rule.upgrade().unwrap().on.as_ref().unwrap().clone()
+		} else {
+			self
+		}
+	}
+}

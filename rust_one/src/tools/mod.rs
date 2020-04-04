@@ -1,4 +1,3 @@
-
 pub trait Handle {
 	type Item;
 	fn handle(self, err_msg : &'static str) -> Result<Self::Item, &'static str>;
@@ -14,3 +13,5 @@ impl<T> Handle for Option<T> {
 		}
 	}
 }
+
+pub mod screen;

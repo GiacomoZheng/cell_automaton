@@ -1,0 +1,136 @@
+use std::sync::mpsc;
+use std::sync::Arc;
+
+use super::states::{Infor, State};
+
+pub struct Cell {
+	state : Option<Arc<dyn State>>,
+	/// true : +1, false : -1
+	txs : Vec<mpsc::Sender<bool>>,
+	/// true : +1, false : -1
+	rx : Option<mpsc::Receiver<bool>>,
+
+	count : usize,
+}
+impl Cell { // methods
+	pub fn get_state(&self) -> bool {self.state.as_ref().expect("uninitialize").get_state()}
+
+	pub fn recv_infor(mut self) -> Cell {
+		// + refine
+		if let Some(receivers) = self.rx.as_ref() {
+			// !
+			let change : isize = receivers.iter().map(|pn| {if pn {1} else {-1}}).sum();
+			eprintln!("!{}", change);
+			if change.is_negative() {
+				self.count -= -change as usize;
+			} else {
+				self.count +=  change as usize;
+			}
+		}
+		self
+	}
+	// pub fn listen(mut self, index : usize) -> thread::JoinHandle<(usize, Cell)> {
+	// 	// + refine
+	// 	thread::spawn(move || {
+	// 		if let Some(receivers) = self.rx.as_ref() {
+	// 			let change : isize = receivers.iter().map(|pn| {if pn {1} else {-1}}).sum();
+	// 			if change.is_negative() {
+	// 				self.count -= -change as usize;
+	// 			} else {
+	// 				self.count +=  change as usize;
+	// 			}
+	// 		}
+	// 		(index, self)
+	// 	})
+	// }
+
+	pub fn update(&mut self) -> Result<bool, &'static str> {
+		// self.recv_infor();
+		let (state, saw_infor) = self.state.take().unwrap().update(self.count())?;
+		
+		self.state = Some(state);
+
+		if let Some(infor) = saw_infor {
+			self.send_infor(infor);
+			return Ok(true);
+		}
+		Ok(false)
+	}
+
+	// /// only for clicked button
+	// pub fn force_to(& mut self, on : bool) {
+	// 	self.recv_infor();
+	// 	let (state, saw_infor) = self.state.take().unwrap().force_to(on);
+	// 	self.state = Some(state);
+	// 	if let Some(infor) = saw_infor {
+	// 		self.send_infor(infor);
+	// 	}
+	// }
+
+	pub fn send_infor(&mut self, infor : Infor) {//-> Result<(), &'static str> {
+		for tx in self.txs.iter_mut() {
+			tx.send(match infor {
+				Infor::OffToOn => true,
+				Infor::OnToOff => false
+			}).unwrap();
+		}
+	}
+
+	/// initialize
+	pub fn set(&mut self, state : &Arc<dyn State>) {
+		self.state = Some(Arc::clone(state));
+
+	}
+
+	/// 
+	pub fn append_adj(& mut self, v : Vec<&mut Cell>) {
+		let (tx, rx) = mpsc::channel();
+		self.rx = Some(rx);
+
+		for cell in v {
+			cell.txs.push(mpsc::Sender::clone(&tx));
+		}
+	}
+	
+	pub fn count(&self) -> usize {
+		self.count
+	}
+
+	/// for debug
+	pub fn count_adj(&self) -> usize {
+		self.txs.len()
+	}
+}
+
+impl Cell { 
+	pub fn new() -> Cell {
+		Cell {
+			state : None,
+			txs : Vec::new(),
+			rx : None,
+			count : 0,
+		}
+	}
+	
+	pub fn from(saw_state : &Option<Arc<dyn State>>) -> Result<Cell, &'static str> {
+		if let Some(state) = saw_state.as_ref() {
+			let mut cell = Cell::new();
+			cell.set(state);
+			Ok(cell)
+		} else {
+			Err("wrong initialization")
+		}
+	}
+}
+
+use std::fmt;
+impl fmt::Display for Cell {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "[{}]", if self.get_state() {"■"} else {"□"})
+    }
+}
+impl fmt::Debug for Cell {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "{}:{}\t", self, self.count_adj()) // **
+    }
+}

@@ -1,27 +1,22 @@
-use crate::rules::Rule;
-use std::fmt;
+// rc version
+
+use super::Rule;
 use std::rc::Weak;
+use std::fmt;
 
 pub struct On {
 	pub rule : Weak<Rule>,
 	pub mapping : Vec<bool>
 }
+pub struct Off {
+	pub rule : Weak<Rule>,
+	pub mapping : Vec<bool>
+}
+
 impl fmt::Debug for On {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "on : {:?}", self.mapping)
 	}
-}
-// impl On {
-// 	pub fn from(Vec<bool> mapping) -> On {
-// 		On {
-// 			mapping
-// 		}
-// 	}
-// }
-
-pub struct Off {
-	pub rule : Weak<Rule>,
-	pub mapping : Vec<bool>
 }
 impl fmt::Debug for Off {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -29,35 +24,41 @@ impl fmt::Debug for Off {
 	}
 }
 
+pub enum Infor {
+	OnToOff,
+	OffToOn,
+}
+use Infor::*;
+
 use std::rc::Rc;
-trait State : fmt::Debug {
+pub trait State : fmt::Debug {
 	fn get_state(&self) -> bool;
-	fn update(self : Rc<Self>, n : usize) -> Result<Rc<dyn State>, &'static str>; // +
+	fn update(self : Rc<Self>, n : usize) -> Result<(Rc<dyn State>, Option<Infor>), &'static str>;
 
 	/// for botton clicked in gui 
-	fn force_to(self : Rc<Self>, on : bool) -> Rc<dyn State>;
+	fn force_to(self : Rc<Self>, on : bool) -> (Rc<dyn State>, Option<Infor>);
 }
 
 impl State for On {
 	fn get_state(&self) -> bool {true}
 
-	fn update(self : Rc<Self>, n : usize) -> Result<Rc<dyn State>, &'static str> {
+	fn update(self : Rc<Self>, n : usize) -> Result<(Rc<dyn State>, Option<Infor>), &'static str> {
 		if let Some(b) = self.mapping.get(n) {
 			if *b {
-				Ok(self)
+				Ok((self, None))
 			} else {
-				Ok(self.rule.upgrade().unwrap().off.as_ref().unwrap().clone())
+				Ok((self.rule.upgrade().unwrap().off.borrow().as_ref().unwrap().clone(), Some(OnToOff)))
 			}
 		} else {
-			Err("too many adjecents around")
+			Err("no enough adjecents around")
 		}
 	}
 
-	fn force_to(self : Rc<Self>, on : bool) -> Rc<dyn State> {
+	fn force_to(self : Rc<Self>, on : bool) -> (Rc<dyn State>, Option<Infor>) {
 		if on {
-			self
+			(self, None)
 		} else {
-			self.rule.upgrade().unwrap().off.as_ref().unwrap().clone()
+			(self.rule.upgrade().unwrap().off.borrow().as_ref().unwrap().clone(), Some(OnToOff))
 		}
 	}
 }
@@ -65,23 +66,23 @@ impl State for On {
 impl State for Off {
 	fn get_state(&self) -> bool {false}
 
-	fn update(self : Rc<Self>, n : usize) -> Result<Rc<dyn State>, &'static str> {
+	fn update(self : Rc<Self>, n : usize) -> Result<(Rc<dyn State>, Option<Infor>), &'static str> {
 		if let Some(b) = self.mapping.get(n) {
 			if *b {
-				Ok(self.rule.upgrade().unwrap().on.as_ref().unwrap().clone())
+				Ok((self.rule.upgrade().unwrap().on.borrow().as_ref().unwrap().clone(), Some(OffToOn)))
 			} else {
-				Ok(self)
+				Ok((self, None))
 			}
 		} else {
-			Err("too many adjecents around")
+			Err("no enough adjecents around")
 		}
 	}
 
-	fn force_to(self : Rc<Self>, on : bool) -> Rc<dyn State> {
+	fn force_to(self : Rc<Self>, on : bool) -> (Rc<dyn State>, Option<Infor>) {
 		if on {
-			self.rule.upgrade().unwrap().on.as_ref().unwrap().clone()
+			(self.rule.upgrade().unwrap().on.borrow().as_ref().unwrap().clone(), Some(OffToOn))
 		} else {
-			self
+			(self, None)
 		}
 	}
 }

@@ -12,12 +12,12 @@ import java.awt.EventQueue;
 public class Diode {
 	// ! if there is a flow
 	public static void main(String[] args) throws Exception {
-		Canvas canvas = new Canvas(10, 3);
+		Canvas canvas = new Canvas(12, 3);
 		canvas.buildup_rect_board();
 		canvas.init(Arrays.asList(
-			Arrays.asList(  lf,  lf, n13,  lf, f13,  lf, f13,  lf, f13,  lf ),
-			Arrays.asList(  sn, f23, n02, n23, f02, f13, f13, f13, f13,  sf ),
-			Arrays.asList(  lf, f13,  lf, n13,  lf, f13,  lf, f13,  lf,  lf )
+			Arrays.asList(  lf,  lf, f13,  lf, n13,  lf, f13,  lf, f13,  lf, f13,  lf ),
+			Arrays.asList(  sn, f13, f13, f23, n02, n23, f02, f13, f13, f13, f13,  sf ),
+			Arrays.asList(  lf, f13,  lf, f13,  lf, n13,  lf, f13,  lf, f13,  lf,  lf )
 		));
 
 		// command line test

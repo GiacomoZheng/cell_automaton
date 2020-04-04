@@ -1,0 +1,76 @@
+// rc version
+
+pub mod tools;
+
+mod cells;
+
+mod states;
+
+use std::rc::{Rc, Weak};
+use std::cell::RefCell;
+use std::fmt;
+
+use states::{On, Off, State};
+pub struct Rule {
+	on  : RefCell<Option<Rc<On>>>,
+	off : RefCell<Option<Rc<Off>>>,
+
+}
+impl Rule {
+	pub fn from(vec_on : Vec<bool>, vec_off : Vec<bool>) -> Rc<Rule> {
+		let rule = Rule {on : RefCell::new(None), off : RefCell::new(None)};
+		let rc = Rc::new(rule);
+		let on = Rc::new(On {
+			rule : Rc::downgrade(&rc),
+			mapping : vec_on
+		});
+		let off = Rc::new(Off {
+			rule : Rc::downgrade(&rc),
+			mapping : vec_off
+		});
+		rc.as_ref().on.borrow_mut().replace(on);
+		rc.as_ref().off.borrow_mut().replace(off);
+		rc
+	}
+
+	pub fn count(&self, on : bool) -> usize {
+		if on {
+			Rc::strong_count(&self.on.borrow().as_ref().unwrap()) - 1
+		} else {
+			Rc::strong_count(&self.off.borrow().as_ref().unwrap()) - 1
+		}
+	}
+
+	pub fn on(self : &Rc<Self>) -> Weak<dyn State> {
+		Rc::downgrade(self.on.borrow().as_ref().unwrap()) as Weak<dyn State>
+	}
+
+	pub fn off(self : &Rc<Self>) -> Weak<dyn State> {
+		Rc::downgrade(self.off.borrow().as_ref().unwrap()) as Weak<dyn State>
+	}
+}
+impl fmt::Debug for Rule {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "{:?}, {:?}", self.on, self.off)
+    }
+}
+
+mod canvas;
+pub use canvas::Canvas;
+impl Canvas {
+	pub fn init(&mut self, states : Vec<&Option<Weak<dyn State>>>) -> Result<(), &'static str> {
+		let mut iterator = self.board.iter_mut().map(|opt| opt.as_mut())
+							.zip(states.iter().map(|opt| opt.as_ref()))
+							.filter(|(saw_cell, _)| saw_cell.is_some());
+		while let Some((Some(cell), saw_state)) = iterator.next() {
+			if let Some(state) = saw_state {
+				let state = state.upgrade().unwrap();
+				cell.set(&state);
+			} else {
+				return Err("wrong initialization : need more configs");
+			}
+		}
+		self.cell_stack.append(&mut (0..self.layout.len()).collect());
+		Ok(())
+	}
+}
