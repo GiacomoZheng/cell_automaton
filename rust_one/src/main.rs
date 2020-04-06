@@ -1,7 +1,39 @@
 use rust_one::Canvas;
 use rust_one::Rule;
 
-#[allow(unused_variables)]
+use rust_one::tools::screen::MainView;
+use orbtk::prelude::*;
+use orbtk;
+use orbtk::theme::DEFAULT_THEME_CSS;
+
+static CSS_EXT: &'static str = include_str!("../res/grid.css");
+
+fn get_theme() -> ThemeValue {
+    ThemeValue::create_from_css(DEFAULT_THEME_CSS)
+        .extension_css(CSS_EXT)
+        .build()
+}
+
+fn main() {
+    // use this only if you want to run it as web application.
+    orbtk::initialize();
+
+    Application::new()
+        .window(|ctx| {
+            Window::create()
+                .title("OrbTk - grid example")
+                .position((100.0, 100.0))
+                .size(420.0, 730.0)
+                .theme(get_theme())
+                .resizeable(true)
+                .child(MainView::create().build(ctx))
+                .build(ctx)
+        })
+        .run();
+}
+
+
+/* #[allow(unused_variables)]
 fn main() -> Result<(), &'static str> {
 	const T : bool = true;
 	const F : bool = false;
@@ -23,25 +55,23 @@ fn main() -> Result<(), &'static str> {
 
 	let mut canvas = Canvas::new(8, 3);
 	canvas.buildup_rect_board();
-	if let Err(e) = canvas.init(vec![
+	canvas.init(vec![
 		 lf, f13,  lf, f13,  lf, f13,  lf,  lf,
 		 sn, f13, f13, f13, f13, f13, f13, f13,
 		 lf,  lf, f13,  lf, f13,  lf, f13,  lf,
-	]) {
-		eprintln!("{}", e);
-	}
+	])?;
 
 	let mut generation = 0;
 	loop {
-		eprintln!("generation:{}\n{:?}", generation, canvas);
-		// eprintln!("generation:{}\n{}", generation, canvas);
+		// println!("generation:{}\n{:?}", generation, canvas);
+		println!("generation:{}\n{}", generation, canvas);
 
-		// eprintln!("{:?}", to_dead);
-		// eprintln!("{:?}", to_live);
-		// eprintln!("{:?}", to_self);
-		eprintln!("{:?}", b13_s13);
+		// println!("{:?}", to_dead);
+		// println!("{:?}", to_live);
+		// println!("{:?}", to_self);
+		println!("{:?}", b13_s13);
 		
-		eprintln!("next:");
+		println!("next:");
 
 		std::io::stdin().read_line(&mut String::new()).unwrap();
 
@@ -53,3 +83,4 @@ fn main() -> Result<(), &'static str> {
 	Ok(())
 
 }
+ */

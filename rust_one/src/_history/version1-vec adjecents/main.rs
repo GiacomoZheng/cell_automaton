@@ -20,16 +20,16 @@ fn main() {
 		vec![ lf, lf, lf, lf, lf ],
 		vec![ lf, lf, lf, lf, lf ],
 	]) {
-		eprintln!("{}", e);
+		println!("{}", e);
 	}
-	eprintln!("{:?}", canvas);
-	eprintln!("longdead::on  : {}", longdead.count(F));
-	eprintln!("longlive::off : {}", longlive.count(T));
+	println!("{:?}", canvas);
+	println!("longdead::on  : {}", longdead.count(F));
+	println!("longlive::off : {}", longlive.count(T));
 
 	// test
 	// let z = vec![1,2,3, 4];
 	// let v = vec![Some(1), Some(2), None, Some(4)];
 	// for i in v.iter().zip(z) {
-	// 	eprintln!("{:?}", i);
+	// 	println!("{:?}", i);
 	// }
 }

@@ -104,7 +104,7 @@ impl Canvas {
 		// + refine
 		let mut handles = Vec::new();
 		
-		eprintln!("cell_stack:{:?}", self.cell_stack); // !
+		// eprintln!("cell_stack:{:?}", self.cell_stack); // !
 		for (index, &multi) in self.cell_stack.iter().enumerate() {//.filter(|(_, &multi)| {multi != 0}) { // + refine
 			let mut cell = self.board[index].take().unwrap();
 			handles.push(thread::spawn(move || {
@@ -138,7 +138,7 @@ impl Canvas { // help functions
 		for e in self.layout.adjecents(index) {
 			*self.cell_stack.get_mut(e).unwrap() += 1;
 		}
-		eprintln!("cell_stack:{:?}", self.cell_stack);
+		// eprintln!("cell_stack:{:?}", self.cell_stack);
 	}
 
 	fn clear_stack(&mut self) {

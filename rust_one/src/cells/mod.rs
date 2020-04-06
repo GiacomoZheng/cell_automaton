@@ -1,7 +1,7 @@
 use std::sync::mpsc;
 use std::sync::Arc;
 
-use super::states::{Infor, State};
+use super::states::State;
 
 pub struct Cell {
 	state : Option<Arc<dyn State>>,
@@ -30,14 +30,9 @@ impl Cell { // methods
 	}
 
 	/// broadcast
-	fn send_infor(&mut self, infor : Infor) {//-> Result<(), &'static str> {
-		let text = match infor {
-			Infor::OffToOn => true,
-			Infor::OnToOff => false
-		};
+	fn send_infor(&mut self, infor : bool) {//-> Result<(), &'static str> {
 		for tx in self.txs.iter_mut() {
-			// eprintln!("!tx"); // !
-			tx.send(text).unwrap();
+			tx.send(infor).unwrap();
 		}
 	}
 
@@ -54,22 +49,26 @@ impl Cell { // methods
 		}
 	}
 
-	// /// only for clicked button
-	// pub fn force_to(& mut self, on : bool) {
-	// 	self.recv_infor();
-	// 	let (state, saw_infor) = self.state.take().unwrap().force_to(on);
-	// 	self.state = Some(state);
-	// 	if let Some(infor) = saw_infor {
-	// 		self.send_infor(infor);
-	// 	}
-	// }
+	/// only for clicked button
+	pub fn force_to(& mut self, on : bool) {
+		// +
+		let (state, saw_infor) = self.state.take().unwrap().force_to(on);
+
+		self.state = Some(state);
+
+		if let Some(infor) = saw_infor {
+			self.send_infor(infor);
+		} else {
+			panic!("no switch");
+		}
+	}
 
 	/// initialize
 	pub fn set(&mut self, state : &Arc<dyn State>) -> bool {
 		// eprintln!("!{}", state.get_state()); // !
 		let on = state.as_ref().get_state();
 		if on {
-			self.send_infor(Infor::OffToOn);
+			self.send_infor(true);
 		} 
 		self.state = Some(Arc::clone(state));
 		on

@@ -44,43 +44,36 @@ impl fmt::Display for Off {
 	}
 }
 
-
-pub enum Infor {
-	OnToOff,
-	OffToOn,
-}
-use Infor::*;
-
 use std::marker::{Sync, Send};
 pub trait State : fmt::Debug + fmt::Display + Sync + Send {
 	fn get_state(&self) -> bool;
-	fn update(self : Arc<Self>, n : usize) -> Result<(Arc<dyn State>, Option<Infor>), &'static str>;
+	fn update(self : Arc<Self>, n : usize) -> Result<(Arc<dyn State>, Option<bool>), &'static str>;
 
 	/// for botton clicked in gui 
-	fn force_to(self : Arc<Self>, on : bool) -> (Arc<dyn State>, Option<Infor>);
+	fn force_to(self : Arc<Self>, on : bool) -> (Arc<dyn State>, Option<bool>);
 
 }
 
 impl State for On {
 	fn get_state(&self) -> bool {true}
 
-	fn update(self : Arc<Self>, n : usize) -> Result<(Arc<dyn State>, Option<Infor>), &'static str> {
+	fn update(self : Arc<Self>, n : usize) -> Result<(Arc<dyn State>, Option<bool>), &'static str> {
 		if let Some(b) = self.mapping.get(n) {
 			if *b {
 				Ok((self, None))
 			} else {
-				Ok((self.rule.upgrade().expect("Do not drop the rule").off.read().unwrap().as_ref().unwrap().clone(), Some(OnToOff)))
+				Ok((self.rule.upgrade().expect("Do not drop the rule").off.read().unwrap().as_ref().unwrap().clone(), Some(false)))
 			}
 		} else {
 			Err("no enough adjecents around")
 		}
 	}
 
-	fn force_to(self : Arc<Self>, on : bool) -> (Arc<dyn State>, Option<Infor>) {
+	fn force_to(self : Arc<Self>, on : bool) -> (Arc<dyn State>, Option<bool>) {
 		if on {
 			(self, None)
 		} else {
-			(self.rule.upgrade().expect("Do not drop the rule").off.read().unwrap().as_ref().unwrap().clone(), Some(OnToOff))
+			(self.rule.upgrade().expect("Do not drop the rule").off.read().unwrap().as_ref().unwrap().clone(), Some(false))
 		}
 	}
 }
@@ -88,10 +81,10 @@ impl State for On {
 impl State for Off {
 	fn get_state(&self) -> bool {false}
 
-	fn update(self : Arc<Self>, n : usize) -> Result<(Arc<dyn State>, Option<Infor>), &'static str> {
+	fn update(self : Arc<Self>, n : usize) -> Result<(Arc<dyn State>, Option<bool>), &'static str> {
 		if let Some(b) = self.mapping.get(n) {
 			if *b {
-				Ok((self.rule.upgrade().expect("Do not drop the rule").on.read().unwrap().as_ref().unwrap().clone(), Some(OffToOn)))
+				Ok((self.rule.upgrade().expect("Do not drop the rule").on.read().unwrap().as_ref().unwrap().clone(), Some(true)))
 			} else {
 				Ok((self, None))
 			}
@@ -100,9 +93,9 @@ impl State for Off {
 		}
 	}
 
-	fn force_to(self : Arc<Self>, on : bool) -> (Arc<dyn State>, Option<Infor>) {
+	fn force_to(self : Arc<Self>, on : bool) -> (Arc<dyn State>, Option<bool>) {
 		if on {
-			(self.rule.upgrade().expect("Do not drop the rule").on.read().unwrap().as_ref().unwrap().clone(), Some(OffToOn))
+			(self.rule.upgrade().expect("Do not drop the rule").on.read().unwrap().as_ref().unwrap().clone(), Some(true))
 		} else {
 			(self, None)
 		}

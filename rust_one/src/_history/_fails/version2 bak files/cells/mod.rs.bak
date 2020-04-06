@@ -20,7 +20,7 @@ impl Cell { // methods
 		if let Some(receivers) = self.rx.as_ref() {
 			// !
 			let change : isize = receivers.iter().map(|pn| {if pn {1} else {-1}}).sum();
-			eprintln!("!{}", change);
+			println!("!{}", change);
 			if change.is_negative() {
 				self.count -= -change as usize;
 			} else {
