@@ -8,14 +8,17 @@ import java.util.Arrays;
 
 import java.awt.EventQueue;
 
-public class C_to_P_24 {
+public class Strobe {
+
 	public static void main(String[] args) throws Exception {
-		Canvas canvas = new Canvas(11, 3);
+		// !!!!! there is something wrong for java version
+		Canvas canvas = new Canvas(3, 3);
 		canvas.buildup_rect_board();
 		canvas.init(Arrays.asList(
-			Arrays.asList(  lf,  lf,  lf,  lf,  lf, f13,  lf, f13,  lf, f13,  lf ),
-			Arrays.asList(  sn, f13, f13, f13, f13, f13, f13, f13, f13, f13, f13 ),
-			Arrays.asList(  lf,  lf,  lf,  lf, f13,  lf, f13,  lf, f13,  lf,  lf )
+			// + 
+			Arrays.asList(  lf,  lf,  lf ),
+			Arrays.asList(  lf,  nSt, lf ),
+			Arrays.asList(  lf,  lf,  lf )
 		));
 
 		// command line test
@@ -43,5 +46,4 @@ public class C_to_P_24 {
 			}
 		});
 	}
-
 }

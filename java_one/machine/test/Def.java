@@ -16,6 +16,10 @@ public class Def {
 	public final static Config sn = Self.on();
 	public final static Config sf = Self.off();
 
+	public final static Rule Strobe = Rule.from(Arrays.asList(  true,  true,  true,  true,  true ), Arrays.asList( false,  false, false, false, false ));
+	public final static Config nSt = Strobe.on();
+	public final static Config fSt = Strobe.off();
+
 	public final static Rule B13S13 = Rule.from(Arrays.asList( false,  true,  false,  true ), Arrays.asList( false,  true,  false,  true ));
 	public final static Config n13 = B13S13.on();
 	public final static Config f13 = B13S13.off();

@@ -15,13 +15,13 @@ public class Cross {
 		canvas.buildup_rect_board();
 		canvas.init(Arrays.asList(
 			// + 
-			Arrays.asList(  lf,  lf,  lf,  lf,  lf,  lf,  lf ),
-			Arrays.asList(  lf,  lf, f13,  lf,  ln,  lf,  lf ),
-			Arrays.asList(  lf, f13,  lf,  lf,  f2,  lf,  lf ),
+			Arrays.asList(  lf,  lf,  lf, f13,  lf,  lf,  lf ),
+			Arrays.asList(  lf,  lf, f13, f13,  lf,  lf,  lf ),
+			Arrays.asList(  lf,  lf, f13, f13, f13,  lf,  lf ),
 			Arrays.asList(  sn, f13, f13, f13, f13, f13, f13 ),
-			Arrays.asList(  lf,  lf,  f2,  lf,  lf, f13,  lf ),
-			Arrays.asList(  lf,  lf,  ln,  lf, f13,  lf,  lf ),
-			Arrays.asList(  lf,  lf,  lf,  lf,  lf,  lf,  lf )
+			Arrays.asList(  lf, f13,  lf, f13, f13,  lf,  lf ),
+			Arrays.asList(  lf,  lf, f13, f13,  lf,  lf,  lf ),
+			Arrays.asList(  lf,  lf,  lf,  sn,  lf,  lf,  lf )
 		));
 
 		// command line test

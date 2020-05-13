@@ -107,25 +107,9 @@ use std::sync::RwLock;
 pub struct Rule {
 	on  : RwLock<Option<Arc<dyn State>>>,
 	off : RwLock<Option<Arc<dyn State>>>,
-
 }
-impl Rule {
-	pub fn from(vec_on : Vec<bool>, vec_off : Vec<bool>) -> Arc<Rule> {
-		let rule = Rule {on : RwLock::new(None), off : RwLock::new(None)};
-		let rc = Arc::new(rule);
-		let on = Arc::new(On {
-			rule : Arc::downgrade(&rc),
-			mapping : vec_on
-		}) as Arc<dyn State>;
-		let off = Arc::new(Off {
-			rule : Arc::downgrade(&rc),
-			mapping : vec_off
-		}) as Arc<dyn State>;
-		rc.on.write().unwrap().replace(on);
-		rc.off.write().unwrap().replace(off);
-		rc
-	}
 
+impl Rule {
 	pub fn count(&self, on : bool) -> usize {
 		if on {
 			Arc::strong_count(&self.on.read().unwrap().as_ref().unwrap()) - 1
@@ -142,6 +126,95 @@ impl Rule {
 		Some(Arc::downgrade(self.off.read().unwrap().as_ref().unwrap()))
 	}
 }
+
+const T : bool = true;
+const F : bool = false;
+impl Rule { // + some basic rules
+
+	pub fn none() -> Option<Weak<dyn State>> {
+		None
+	}
+
+	pub fn from(vec_on : Vec<bool>, vec_off : Vec<bool>) -> Arc<Rule> {
+		let rule = Rule {on : RwLock::new(None), off : RwLock::new(None)};
+		let rc = Arc::new(rule);
+
+		let on = Arc::new(On {
+			rule : Arc::downgrade(&rc),
+			mapping : vec_on
+		}) as Arc<dyn State>;
+		let off = Arc::new(Off {
+			rule : Arc::downgrade(&rc),
+			mapping : vec_off
+		}) as Arc<dyn State>;
+
+		rc.on.write().unwrap().replace(on);
+		rc.off.write().unwrap().replace(off);
+		rc
+	}
+
+	pub fn to_off(capcity : usize) -> Arc<Rule> {
+		Rule::from(
+			(0..capcity + 1).map(|_| {F}).collect(), 
+			(0..capcity + 1).map(|_| {F}).collect()
+		)
+	}
+
+	pub fn to_on(capcity : usize) -> Arc<Rule> {
+		Rule::from(
+			(0..capcity + 1).map(|_| {T}).collect(), 
+			(0..capcity + 1).map(|_| {T}).collect()
+		)
+	}
+
+	pub fn to_self(capcity : usize) -> Arc<Rule> {
+		Rule::from(
+			(0..capcity + 1).map(|_| {T}).collect(), 
+			(0..capcity + 1).map(|_| {F}).collect()
+		)
+	}
+
+	pub fn to_opp(capcity : usize) -> Arc<Rule> {
+		Rule::from(
+			(0..capcity + 1).map(|_| {F}).collect(), 
+			(0..capcity + 1).map(|_| {T}).collect()
+		)
+	}
+
+	/// use the manner of game of life
+	/// B : Birth, S : Survive, C : Capcity of adjecents
+	/// 0-9
+	/// a-z : 10 - 35
+	#[allow(non_snake_case)]
+	pub fn from_B_S_C(birth : &'static str, survive : &'static str, capcity : usize) -> Arc<Rule> {
+		if capcity >= 36 {
+			unimplemented!()
+		}
+		
+		let mut vec_on : Vec<bool> = (0..capcity + 1).map(|_| {F}).collect();
+		let mut vec_off : Vec<bool> = (0..capcity + 1).map(|_| {F}).collect();
+
+		for b in birth.chars() {
+			if let Some(index) = b.to_digit(36) {
+				vec_off[index as usize] = T;
+			} else {
+				panic!("arguments for Birth should be integers")
+			}
+		}
+
+		for s in survive.chars() {
+			if let Some(index) = s.to_digit(36) {
+				vec_on[index as usize] = T;
+			} else {
+				panic!("arguments for Survive should be integers")
+			}
+		}
+
+		Rule::from(vec_on, vec_off)
+
+	}
+}
+
 impl fmt::Display for Rule {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		// self.on.read().unwrap().

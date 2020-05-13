@@ -29,7 +29,7 @@ public class Canvas {
 			for (int j = 0; j < m; j++) {
 				if (board.get(i).get(j) != null) {
 					// System.out.println(i + ", " + j);
-					board.get(i).get(j).set(configs.get(i).get(j)); // + if wrong here add some infor
+					board.get(i).get(j).set(configs.get(i).get(j)); // + if wrong here add some info
 				}
 			}
 		}
