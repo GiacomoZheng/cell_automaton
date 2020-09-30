@@ -1,5 +1,5 @@
 [package]
-name = "rust_one"
+name = "cell_automation"
 version = "0.1.0"
 authors = ["GiacomoZheng <giacomo821@outlook.com>"]
 edition = "2018"
