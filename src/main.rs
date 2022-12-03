@@ -143,7 +143,7 @@ fn main() -> Result<(), &'static str> {
 		canvas.update()?;
 	}
 
-	#[allow(unreachable_code)]
+	// #[allow(unreachable_code)]
 	
 	eprintln!("{:?}", sy_time.elapsed().unwrap().as_millis());
 	println!("generation:{}\n{}", generation, canvas);
